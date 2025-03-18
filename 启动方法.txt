@@ -1,0 +1,3 @@
+cd wallet/web3_wallet
+然后 
+npm run sever
