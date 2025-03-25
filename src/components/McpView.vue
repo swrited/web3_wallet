@@ -31,24 +31,26 @@
 
 <script setup>
 import { ref, onMounted, nextTick } from 'vue';
-import { MCPClient } from '../services/mcp-client';
+import { mcpService } from '../services/mcp-server';
 
 const messages = ref([]);
 const userInput = ref('');
 const isProcessing = ref(false);
 const messagesContainer = ref(null);
-const mcpClient = ref(null);
 
 // 初始化 MCP 客户端
 onMounted(async () => {
   try {
-    mcpClient.value = new MCPClient();
-    await mcpClient.value.connect_to_server('../mcp-server/wea_server.py');
+    await mcpService.initialize();
+    messages.value.push({
+      role: 'assistant',
+      content: 'MCP 客户端已成功初始化，您可以开始对话了。'
+    });
   } catch (error) {
     console.error('MCP 客户端初始化失败:', error);
     messages.value.push({
       role: 'assistant',
-      content: 'MCP 客户端初始化失败，请检查服务器状态。'
+      content: 'MCP 客户端初始化失败，请检查服务器是否正常运行。错误信息：' + error.message
     });
   }
 });
@@ -63,13 +65,13 @@ const sendMessage = async () => {
   isProcessing.value = true;
 
   try {
-    const response = await mcpClient.value.process_query(userMessage);
+    const response = await mcpService.processQuery(userMessage);
     messages.value.push({ role: 'assistant', content: response });
   } catch (error) {
     console.error('发送消息失败:', error);
     messages.value.push({
       role: 'assistant',
-      content: '发送消息失败，请重试。'
+      content: '发送消息失败，请重试。错误信息：' + error.message
     });
   } finally {
     isProcessing.value = false;
